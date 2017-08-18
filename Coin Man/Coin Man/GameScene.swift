@@ -14,7 +14,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var coinTimer: Timer?
     var bombTimer: Timer?
     var coinMan: SKSpriteNode?
-    var ground: SKSpriteNode?
+ 
     var ceiling: SKSpriteNode?
     var scoreLabel: SKLabelNode?
     var yourScoreLabel: SKLabelNode?
@@ -35,20 +35,24 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         physicsWorld.contactDelegate = self
         
-        
-        
-        
         coinMan = childNode(withName: "coinMan") as? SKSpriteNode
         coinMan?.physicsBody?.categoryBitMask = coinManCategory
-        
         
         // who is coin man gonna interact with?
         coinMan?.physicsBody?.contactTestBitMask = coinCategory | bombCategory
         coinMan?.physicsBody?.collisionBitMask = groundAndCeilingCategory
         
-        ground = childNode(withName: "ground") as? SKSpriteNode
-        ground?.physicsBody?.categoryBitMask = groundAndCeilingCategory
-        ground?.physicsBody?.collisionBitMask = coinManCategory
+        // Animations of coin man running
+        
+        var coinManRun : [SKTexture] = []
+        
+        for number in 1...4 {
+            
+            coinManRun.append(SKTexture(imageNamed: "frame-\(number)"))
+            
+        }
+        
+        coinMan?.run(SKAction.repeatForever(SKAction.animate(with: coinManRun, timePerFrame: 0.1)))
         
         ceiling = childNode(withName: "ceiling") as? SKSpriteNode
         ceiling?.physicsBody?.categoryBitMask = groundAndCeilingCategory
@@ -58,8 +62,38 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         
         startTimers()
+        createGrass()
         
-        
+    }
+    
+    func createGrass() {
+        let sizingGrass = SKSpriteNode(imageNamed: "grass")
+        let numberOfGrass = Int(size.width / sizingGrass.size.width) + 1
+        for number in 0...numberOfGrass {
+            
+            let grass = SKSpriteNode(imageNamed: "grass")
+            grass.physicsBody = SKPhysicsBody(rectangleOf: grass.size)
+            grass.physicsBody?.categoryBitMask = groundAndCeilingCategory
+            grass.physicsBody?.collisionBitMask = coinManCategory
+            grass.physicsBody?.affectedByGravity = false
+            grass.physicsBody?.isDynamic = false
+            addChild(grass)
+            
+            let grassX = -size.width / 2 + grass.size.width / 2 + grass.size.width * CGFloat(number)
+            grass.position = CGPoint(x: grassX, y: -size.height / 2 + grass.size.height / 2 - 15 )
+            
+            let speed = 100.0
+            
+            let firstMoveLeft = SKAction.moveBy(x: -grass.size.width - grass.size.width * CGFloat(number) , y: 0, duration: TimeInterval(grass.size.width + grass.size.width * CGFloat(number)) / speed)
+            
+            let resetGrass = SKAction.moveBy(x: size.width + grass.size.width, y: 0, duration: 0)
+            
+            let grassFullMove = SKAction.moveBy(x: -size.width - grass.size.width, y: 0, duration: TimeInterval(size.width + grass.size.width) / speed)
+            let grassMovingForever = SKAction.repeatForever(SKAction.sequence([grassFullMove, resetGrass]))
+            
+            grass.run(SKAction.sequence([firstMoveLeft, resetGrass, grassMovingForever]))
+            
+        }
     }
     
     func gameOver() {
@@ -181,9 +215,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         bomb.physicsBody?.contactTestBitMask = bombCategory
         bomb.physicsBody?.collisionBitMask = 0
         addChild(bomb)
+        let sizingGrass = SKSpriteNode(imageNamed: "grass")
         
         let maxY = size.height / 2 - bomb.size.height / 2
-        let minY = -size.height / 2 + bomb.size.height / 2
+        let minY = -size.height / 2 + bomb.size.height / 2 + sizingGrass.size.height
         
         let range = maxY - minY
         
@@ -210,8 +245,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         coin.physicsBody?.collisionBitMask = 0
         addChild(coin)
         
+        let sizingGrass = SKSpriteNode(imageNamed: "grass")
+        
+        
         let maxY = size.height / 2 - coin.size.height / 2
-        let minY = -size.height / 2 + coin.size.height / 2
+        let minY = -size.height / 2 + coin.size.height / 2 + sizingGrass.size.height
         
         let range = maxY - minY
         
