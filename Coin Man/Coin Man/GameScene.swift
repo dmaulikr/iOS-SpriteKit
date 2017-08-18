@@ -9,14 +9,50 @@
 import SpriteKit
 import GameplayKit
 
-class GameScene: SKScene {
+class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var coinTimer: Timer?
     var coinMan: SKSpriteNode?
+    var ground: SKSpriteNode?
+    var ceiling: SKSpriteNode?
+    var scoreLabel: SKLabelNode?
+    
+    var score = 0
+    
+    // create categories for each objects to create the collsion
+    
+    let coinManCategory: UInt32 = 0x1 << 1
+    let coinCategory: UInt32 = 0x1 << 2
+    let bombCategory: UInt32 = 0x1 << 3
+    let groundAndCeilingCategory: UInt32 = 0x1 << 4
     
     override func didMove(to view: SKView) {
         
+        // Create contact delegate
+        
+        physicsWorld.contactDelegate = self
+        
+        
+        
+        
         coinMan = childNode(withName: "coinMan") as? SKSpriteNode
+        coinMan?.physicsBody?.categoryBitMask = coinManCategory
+        
+        
+        // who is coin man gonna interact with?
+        coinMan?.physicsBody?.contactTestBitMask = coinCategory | bombCategory
+        coinMan?.physicsBody?.collisionBitMask = groundAndCeilingCategory
+        
+        ground = childNode(withName: "ground") as? SKSpriteNode
+        ground?.physicsBody?.categoryBitMask = groundAndCeilingCategory
+        ground?.physicsBody?.collisionBitMask = coinManCategory
+        
+        ceiling = childNode(withName: "ceiling") as? SKSpriteNode
+        ceiling?.physicsBody?.categoryBitMask = groundAndCeilingCategory
+        
+        scoreLabel = childNode(withName: "scoreLabel") as? SKLabelNode
+        
+        
         
         coinTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true, block: { (timer) in
             self.createCoin()
@@ -25,6 +61,24 @@ class GameScene: SKScene {
        
     }
     
+    func didBegin(_ contact: SKPhysicsContact) {
+        
+        score += 1
+        scoreLabel?.text = "Score: \(score)"
+        
+        if contact.bodyA.categoryBitMask == coinCategory {
+            
+
+            contact.bodyA.node?.removeFromParent()
+
+        }
+        
+        if contact.bodyB.categoryBitMask == coinCategory {
+            
+            contact.bodyB.node?.removeFromParent()
+            
+        }
+    }
     
     
     
@@ -38,7 +92,11 @@ class GameScene: SKScene {
     func createCoin() {
         
         let coin = SKSpriteNode(imageNamed: "coin")
-        
+        coin.physicsBody = SKPhysicsBody(rectangleOf: coin.size)
+        coin.physicsBody?.affectedByGravity = false
+        coin.physicsBody?.categoryBitMask = coinCategory
+        coin.physicsBody?.contactTestBitMask = coinManCategory
+        coin.physicsBody?.collisionBitMask = 0
         addChild(coin)
         
         let maxY = size.height / 2 - coin.size.height / 2
