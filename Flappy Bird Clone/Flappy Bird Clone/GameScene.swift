@@ -16,7 +16,53 @@ class GameScene: SKScene {
     var bird = SKSpriteNode()
     var background = SKSpriteNode()
     
+    
+    @objc func makePipes(){
+        
+        // set the gap between the pipes
+        
+        let gapHeight = bird.size.height * 4
+        
+        // randomize the pipes
+        
+        let movementAmount = arc4random() % UInt32(self.frame.height / 2)
+        
+        let pipeOffSet = CGFloat(movementAmount) - self.frame.height / 4
+        
+        // move pipes to the left
+        
+        let movePipes = SKAction.move(by: CGVector(dx: -2 * self.frame.width, dy: 0), duration: TimeInterval(self.frame.width / 100))
+        let removePipes = SKAction.removeFromParent()
+        let moveAndRemovePipes = SKAction.sequence([movePipes, removePipes])
+        
+        // add and create the pipe obstacles
+        
+        let pipeTexture = SKTexture(imageNamed: "pipe1.png")
+        let pipe1 = SKSpriteNode(texture: pipeTexture)
+        
+        pipe1.position = CGPoint(x: self.frame.midX + self.frame.width, y: self.frame.midY + pipeTexture.size().height / 2 + gapHeight / 2 + pipeOffSet)
+        pipe1.run(moveAndRemovePipes)
+        
+        self.addChild(pipe1)
+        
+        // add the second pipe
+        
+        let pipeTexture2 = SKTexture(imageNamed: "pipe2.png")
+        let pipe2 = SKSpriteNode(texture: pipeTexture2)
+        
+        pipe2.position = CGPoint(x: self.frame.midX + self.frame.width, y: self.frame.midY - pipeTexture2.size().height / 2 - gapHeight / 2 + pipeOffSet)
+        pipe2.run(moveAndRemovePipes)
+        
+        self.addChild(pipe2)
+        
+        
+    }
+    
+    
     override func didMove(to view: SKView) {
+        
+        _ = Timer.scheduledTimer(timeInterval: 3, target: self, selector: #selector(self.makePipes), userInfo: nil, repeats: true)
+        
         
         // lets add the bg texture
         
@@ -72,6 +118,8 @@ class GameScene: SKScene {
         ground.physicsBody?.isDynamic = false
         
         self.addChild(ground)
+        
+        
         
     }
     
